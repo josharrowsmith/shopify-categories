@@ -24,6 +24,11 @@ export default async function metaobjectsCreator(
                   collection: field(key: "collection") {
                       value
                   }
+                  capabilities {
+                    publishable {
+                      status
+                    }
+                  }
                 }
                 userErrors {
                   field
@@ -36,6 +41,11 @@ export default async function metaobjectsCreator(
           metaobject: {
             type: "category",
             handle: category,
+            capabilities: {
+              publishable: {
+                status: "ACTIVE"
+              }
+            },
             fields: [
               {
                 key: "parent",
