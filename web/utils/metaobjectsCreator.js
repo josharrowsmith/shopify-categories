@@ -4,11 +4,16 @@ import shopify from "../shopify.js";
 
 export default async function metaobjectsCreator(
   session,
+  grandParent,
   category,
   ids,
   parentID
 ) {
   const client = new shopify.api.clients.Graphql({ session });
+
+  const GrandParent = grandParent ? grandParent : "";
+
+  console.log(ids);
 
   try {
     const data = await client.query({
@@ -18,11 +23,14 @@ export default async function metaobjectsCreator(
                 metaobject {
                   handle
                   id
+                  grandparent: field(key: "grandparent") {
+                    value
+                  }
                   parent: field(key: "parent") {
                     value
                   }
-                  collection: field(key: "collection") {
-                      value
+                  subcollection: field(key: "collection") {
+                    value
                   }
                   capabilities {
                     publishable {
@@ -43,16 +51,20 @@ export default async function metaobjectsCreator(
             handle: category,
             capabilities: {
               publishable: {
-                status: "ACTIVE"
-              }
+                status: "ACTIVE",
+              },
             },
             fields: [
+              {
+                key: "grandparent",
+                value: GrandParent,
+              },
               {
                 key: "parent",
                 value: category,
               },
               {
-                key: "collection",
+                key: "subcollection",
                 value: JSON.stringify(ids),
               },
             ],
@@ -61,13 +73,15 @@ export default async function metaobjectsCreator(
       },
     });
 
-    if (!data.body.data.metaobjectCreate.userErrors.length) {
-      metaobjectsPageCreator(
-        session,
-        data.body.data.metaobjectCreate.metaobject.id,
-        parentID
-      );
-    }
+    console.log(JSON.stringify(data.body.data));
+
+    // if (!data.body.data.metaobjectCreate.userErrors.length) {
+    //   metaobjectsPageCreator(
+    //     session,
+    //     data.body.data.metaobjectCreate.metaobject.id,
+    //     parentID
+    //   );
+    // }
   } catch (error) {
     if (error instanceof GraphqlQueryError) {
       throw new Error(

@@ -57,18 +57,18 @@ app.get("/api/create", async (_req, res) => {
     // read csv from a export i.e neto
     const csvData = await readCsvFile("../data.csv");
 
-    // figure what collections need to be made
+    // // figure what collections need to be made
     const splitCollections = csvData.map((string) => string.split(">"));
     const flattenedCollections = splitCollections.flat();
 
     const uniqueCollections = [...new Set(flattenedCollections)];
 
-    // const formatedCollections = uniqueCollections.map((collection) =>
-    //   collection.replace(/\s+/g, "-").toLowerCase()
-    // );
+    const formatedCollections = uniqueCollections.map((collection) =>
+      collection.replace(/\s+/g, "-").toLowerCase()
+    );
 
-    // filter current collections
-    const createCollections = uniqueCollections.filter(
+    // // filter current collections
+    const createCollections = formatedCollections.filter(
       (el) => !collectionHandles.includes(el)
     );
 
@@ -77,7 +77,8 @@ app.get("/api/create", async (_req, res) => {
       const custom_collection = new shopify.api.rest.CustomCollection({
         session: session,
       });
-      custom_collection.title = element;
+      custom_collection.title =
+        element.charAt(0).toUpperCase() + element.substring(1);
 
       try {
         await custom_collection.save({
@@ -94,25 +95,32 @@ app.get("/api/create", async (_req, res) => {
 
     setTimeout(() => {
       // i need to wait till collection have been made
-      Object.keys(parentAndChildObject).map(async (parent) => {
-        // need parent ID to link ID
+      parentAndChildObject.map(async (i) => {
+        //   // need parent ID to link ID
         const parentID = await getCollectionByHandle(
           session,
-          parent.replace(/\s+/g, "-").toLowerCase()
+          i.Parent.replace(/\s+/g, "-").toLowerCase()
         );
-        // ids of the children collections
+        // // ids of the children collections
         const ids = await Promise.all(
-          parentAndChildObject[parent].map((handle) =>
+          i.children.map((value) =>
             getCollectionByHandle(
               session,
-              handle.replace(/\s+/g, "-").toLowerCase()
+              value.replace(/\s+/g, "-").toLowerCase()
             )
           )
         );
-        // off by one because of map
+        //   // off by one because of map
         const uniqueIDS = [...new Set(ids)];
+
         // makes a metaObjects which has all the children collections
-        metaobjectsCreator(session, parent, uniqueIDS, parentID);
+        metaobjectsCreator(
+          session,
+          i.Grandparent,
+          i.Parent,
+          uniqueIDS,
+          parentID
+        );
       });
     }, 3000);
 
